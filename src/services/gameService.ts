@@ -22,9 +22,7 @@ export const buyCrypto = async (
     // Appeler l'API pour effectuer l'achat
     const response = await post(ENDPOINTS.BUY_CRYPTO, {
       cryptoId,
-      cryptoName,
-      amount,
-      price
+      amount
     });
     
     console.log('💰 Réponse de l\'API après achat:', response);
@@ -61,8 +59,7 @@ export const sellCrypto = async (
     // Appeler l'API pour effectuer la vente
     const response = await post(ENDPOINTS.SELL_CRYPTO, {
       cryptoId,
-      amount,
-      price
+      amount
     });
     
     console.log('💰 Réponse de l\'API après vente:', response);

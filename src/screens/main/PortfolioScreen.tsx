@@ -302,8 +302,9 @@ const PortfolioScreen: React.FC = () => {
 
   const totalPortfolioValue = calculateTotalPortfolioValue();
   const totalProfitLoss = calculateTotalProfitLoss();
-  const totalProfitLossPercentage = user?.balance 
-    ? ((user.balance - 10000) / 10000) * 100
+  const totalValue = (user?.balance || 0) + totalPortfolioValue;
+  const totalProfitLossPercentage = totalValue > 0 
+    ? ((totalValue - 10000) / 10000) * 100
     : 0;
 
   return (
@@ -340,7 +341,7 @@ const PortfolioScreen: React.FC = () => {
         <View style={styles.container}>
           <View style={styles.balanceCard}>
             <Text style={styles.balanceLabel}>Valeur totale</Text>
-            <Text style={styles.balanceValue}>{formatPrice(user?.balance || 0)}</Text>
+            <Text style={styles.balanceValue}>{formatPrice(totalValue)}</Text>
             
             <View style={styles.profitLossRow}>
               <Text style={styles.profitLossLabel}>Profit/Perte</Text>
@@ -352,7 +353,7 @@ const PortfolioScreen: React.FC = () => {
                   ]}
                 >
                   {totalProfitLossPercentage >= 0 ? '+' : ''}
-                  {formatPrice(user ? user.balance - 10000 : 0)}
+                  {formatPrice(totalValue - 10000)}
                   {' ('}
                   {totalProfitLossPercentage.toFixed(2)}
                   {'%)'}
