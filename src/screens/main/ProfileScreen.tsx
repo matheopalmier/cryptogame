@@ -279,7 +279,7 @@ const ProfileScreen: React.FC = () => {
       <View style={styles.statsCard}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>
-            ${liquidBalance.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}
+            ${liquidBalance.toFixed(2)}
           </Text>
           <Text style={styles.statLabel}>Solde liquide</Text>
         </View>
@@ -321,12 +321,12 @@ const ProfileScreen: React.FC = () => {
       <View style={styles.valueCard}>
         <Text style={styles.cardTitle}>Valeur totale de votre portefeuille</Text>
         <Text style={styles.totalValue}>
-          ${totalValue.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}
+          ${totalValue.toFixed(2)}
         </Text>
         <View style={styles.valueSplit}>
           <View style={styles.valueItem}>
             <Text style={styles.valueAmount}>
-              ${liquidBalance.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}
+              ${liquidBalance.toFixed(2)}
             </Text>
             <Text style={styles.valueLabel}>Solde liquide</Text>
           </View>
@@ -335,7 +335,7 @@ const ProfileScreen: React.FC = () => {
           </View>
           <View style={styles.valueItem}>
             <Text style={styles.valueAmount}>
-              ${assetsValue.toLocaleString('fr-FR', { maximumFractionDigits: 0 })}
+              ${assetsValue.toFixed(2)}
             </Text>
             <Text style={styles.valueLabel}>Valeur des actifs</Text>
           </View>
@@ -374,7 +374,7 @@ const ProfileScreen: React.FC = () => {
                     {crypto?.name || asset.cryptoId}
                   </Text>
                   <Text style={styles.assetValue}>
-                    ${currentValue.toLocaleString('fr-FR', { maximumFractionDigits: 2 })}
+                    ${currentValue.toFixed(2)}
                   </Text>
                 </View>
                 <View style={styles.assetDetails}>
@@ -392,11 +392,11 @@ const ProfileScreen: React.FC = () => {
                 <View style={styles.assetPriceInfo}>
                   <Text style={styles.assetPriceLabel}>Prix d'achat:</Text>
                   <Text style={styles.assetPrice}>
-                    ${asset.averageBuyPrice.toLocaleString('fr-FR', { maximumFractionDigits: 2 })}
+                    ${asset.averageBuyPrice.toFixed(2)}
                   </Text>
                   <Text style={styles.assetPriceLabel}>Prix actuel:</Text>
                   <Text style={styles.assetPrice}>
-                    ${crypto?.currentPrice.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) || 'N/A'}
+                    ${crypto?.currentPrice.toFixed(2) || 'N/A'}
                   </Text>
                 </View>
               </View>
@@ -443,7 +443,11 @@ const ProfileScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>Historique des transactions</Text>
         
         {transactions.length > 0 ? (
-          transactions.slice(0, 5).map((transaction) => (
+          // Afficher les 4 transactions les plus récentes en triant par date décroissante
+          [...transactions]
+            .sort((a, b) => b.timestamp - a.timestamp) // Trier par date décroissante (plus récent en premier)
+            .slice(0, 4) // Prendre seulement les 4 premières (plus récentes)
+            .map((transaction) => (
             <View key={transaction.id} style={styles.transactionItem}>
               <View style={styles.transactionInfo}>
                 <Text style={styles.transactionType}>
@@ -458,10 +462,7 @@ const ProfileScreen: React.FC = () => {
                   {transaction.amount.toFixed(4)} {transaction.cryptoId.toUpperCase()}
                 </Text>
                 <Text style={styles.transactionPrice}>
-                  ${transaction.price.toLocaleString('fr-FR', { 
-                    minimumFractionDigits: 2, 
-                    maximumFractionDigits: 2 
-                  })}
+                  ${transaction.price.toFixed(2)}
                 </Text>
               </View>
             </View>
@@ -472,7 +473,7 @@ const ProfileScreen: React.FC = () => {
           </Text>
         )}
         
-        {transactions.length > 5 && (
+        {transactions.length > 4 && (
           <TouchableOpacity style={styles.viewAllButton}>
             <Text style={styles.viewAllButtonText}>Voir tout l'historique</Text>
           </TouchableOpacity>

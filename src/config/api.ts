@@ -7,7 +7,7 @@ const getApiUrl = () => {
   // Si nous sommes en environnement de développement
   if (__DEV__) {
     // Adresse IP de votre machine (identifiée par ifconfig)
-    const YOUR_COMPUTER_IP = '192.168.86.27';
+    const YOUR_COMPUTER_IP = '192.168.1.181';
     
     // Le port correct de votre serveur backend (d'après vos logs)
     const BACKEND_PORT = 3005;
@@ -29,8 +29,8 @@ export const API_URL = getApiUrl();
 
 // URL de l'API Coinlore (remplace CoinGecko)
 export const COINLORE_API_URL = 'https://api.coinlore.net/api';
-// URL pour les icônes des cryptomonnaies (utilise CryptoCompare pour les images)
-export const CRYPTO_ICON_URL = 'https://www.cryptocompare.com/media/';
+// L'URL pour les icônes crypto a été supprimée car le système d'icônes ne fonctionnait pas correctement
+// Une image par défaut sera utilisée à la place
 
 // Endpoints
 export const ENDPOINTS = {

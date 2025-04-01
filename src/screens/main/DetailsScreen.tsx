@@ -15,12 +15,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { MainStackParamList } from '../../navigation';
 import { fetchCryptoDetails, fetchCryptoPriceHistory } from '../../services/cryptoApi';
 import { Cryptocurrency, PriceHistoryPoint } from '../../types';
-import { CRYPTO_ICON_URL } from '../../config/api';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Details'>;
 
 const getCryptoIconUrl = (symbol: string): string => {
-  return `${CRYPTO_ICON_URL}${symbol.toLowerCase()}.png`;
+  // Retourne une image par défaut pour toutes les cryptos
+  return 'https://via.placeholder.com/32';
 };
 
 const DetailsScreen: React.FC<Props> = ({ route, navigation }) => {

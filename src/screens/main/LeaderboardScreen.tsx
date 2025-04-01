@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import * as gameService from '../../services/gameService';
 import { LeaderboardEntry } from '../../types';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 
 // Interface mise à jour pour inclure la totalValue et portfolioValue
 interface EnhancedLeaderboardEntry extends LeaderboardEntry {
@@ -15,19 +16,62 @@ const LeaderboardScreen: React.FC = () => {
   const [leaderboard, setLeaderboard] = useState<EnhancedLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const { user } = useAuth();
 
+  // Charger les données au montage du composant
   useEffect(() => {
+    console.log('🏆 LeaderboardScreen: Chargement initial des données');
     fetchLeaderboard();
+    
+    // Rafraîchissement automatique toutes les 60 secondes
+    console.log('🏆 LeaderboardScreen: Configuration du rafraîchissement automatique');
+    const intervalId = setInterval(() => {
+      console.log('🏆 LeaderboardScreen: Rafraîchissement automatique');
+      fetchLeaderboard(false);
+    }, 60000); // 60 secondes
+    
+    return () => {
+      console.log('🏆 LeaderboardScreen: Nettoyage du rafraîchissement automatique');
+      clearInterval(intervalId);
+    };
   }, []);
 
-  const fetchLeaderboard = async () => {
+  // Actualiser les données lorsque l'écran est de nouveau au premier plan
+  useFocusEffect(
+    useCallback(() => {
+      console.log('🏆 LeaderboardScreen: L\'écran est au premier plan');
+      
+      // Vérifier si la dernière mise à jour date de plus de 30 secondes ou est nulle
+      const shouldRefresh = !lastUpdate || new Date().getTime() - lastUpdate.getTime() > 30000;
+      
+      if (shouldRefresh) {
+        console.log('🏆 LeaderboardScreen: Rechargement des données (dernière mise à jour > 30s)');
+        fetchLeaderboard(false); // Ne pas afficher l'indicateur de rafraîchissement
+      } else {
+        console.log('🏆 LeaderboardScreen: Pas de rechargement nécessaire (dernière mise à jour < 30s)');
+      }
+            
+      return () => {
+        console.log('🏆 LeaderboardScreen: L\'écran n\'est plus au premier plan');
+      };
+    }, [lastUpdate])
+  );
+
+  const fetchLeaderboard = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
+      
+      // Force le clear du cache des données de leaderboard dans gameService
+      await gameService.clearLeaderboardCache();
+      
       const data = await gameService.getLeaderboard();
       // Confirmer que les données contiennent les nouvelles propriétés
-      console.log('Leaderboard data received:', data[0]);
+      console.log('🏆 Leaderboard data received:', data[0]);
       setLeaderboard(data as EnhancedLeaderboardEntry[]);
+      setLastUpdate(new Date());
       setError(null);
     } catch (err) {
       console.error('Failed to fetch leaderboard:', err);
@@ -39,6 +83,26 @@ const LeaderboardScreen: React.FC = () => {
 
   const formatCurrency = (value: number) => {
     return `$${value.toLocaleString('fr-FR', { maximumFractionDigits: 2 })}`;
+  };
+
+  // Formater le temps écoulé depuis la dernière mise à jour
+  const formatTimeAgo = (date: Date | null): string => {
+    if (!date) return 'jamais';
+    
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    
+    if (diffSec < 60) return `il y a ${diffSec} secondes`;
+    
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `il y a ${diffMin} minute${diffMin > 1 ? 's' : ''}`;
+    
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24) return `il y a ${diffHour} heure${diffHour > 1 ? 's' : ''}`;
+    
+    const diffDay = Math.floor(diffHour / 24);
+    return `il y a ${diffDay} jour${diffDay > 1 ? 's' : ''}`;
   };
 
   const renderItem = ({ item, index }: { item: EnhancedLeaderboardEntry; index: number }) => {
@@ -96,7 +160,7 @@ const LeaderboardScreen: React.FC = () => {
     );
   };
 
-  if (loading) {
+  if (loading && leaderboard.length === 0) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#4a89f3" />
@@ -110,7 +174,7 @@ const LeaderboardScreen: React.FC = () => {
         <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity
           style={styles.retryButton}
-          onPress={fetchLeaderboard}
+          onPress={() => fetchLeaderboard()}
         >
           <Text style={styles.retryButtonText}>Réessayer</Text>
         </TouchableOpacity>
@@ -125,6 +189,22 @@ const LeaderboardScreen: React.FC = () => {
         <Text style={styles.headerSubtitle}>
           Basé sur la valeur totale (solde + actifs)
         </Text>
+        <View style={styles.updateInfo}>
+          <Text style={styles.updateText}>
+            Dernière mise à jour: {formatTimeAgo(lastUpdate)}
+          </Text>
+          <TouchableOpacity 
+            onPress={() => fetchLeaderboard()} 
+            disabled={loading}
+            style={styles.refreshButton}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text style={styles.refreshButtonText}>Actualiser</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
       
       {leaderboard.length > 0 ? (
@@ -135,7 +215,7 @@ const LeaderboardScreen: React.FC = () => {
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
           refreshing={loading}
-          onRefresh={fetchLeaderboard}
+          onRefresh={() => fetchLeaderboard()}
         />
       ) : (
         <View style={styles.emptyContainer}>
@@ -174,6 +254,31 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 8,
+  },
+  updateInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  updateText: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginRight: 8,
+  },
+  refreshButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  refreshButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
   },
   listContainer: {
     paddingVertical: 10,

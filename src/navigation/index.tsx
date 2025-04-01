@@ -111,7 +111,7 @@ const MainNavigator = () => {
   return (
     <MainStack.Navigator>
       <MainStack.Screen 
-        name="MainTabs" 
+        name="Marché" 
         component={MainTabs} 
         options={{ headerShown: false }}
       />

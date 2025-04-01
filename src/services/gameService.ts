@@ -1,9 +1,10 @@
 import * as SecureStore from 'expo-secure-store';
-import { User, PortfolioItem, Transaction, LeaderboardEntry } from '../types';
+import { User, PortfolioItem, Transaction, LeaderboardEntry, Cryptocurrency } from '../types';
 import { getCurrentUser } from './authService';
 import { ENDPOINTS } from '../config/api';
 import { get, post } from './apiService';
 import mockData from './mockData';
+import { fetchTopCryptos } from './cryptoApi';
 
 const USER_DATA_KEY = 'user_data';
 const TRANSACTIONS_KEY = 'transactions';
@@ -106,8 +107,12 @@ export const getTransactionHistory = async (): Promise<Transaction[]> => {
 export const getLeaderboard = async (): Promise<LeaderboardEntry[]> => {
   try {
     console.log('📊 Récupération du classement des utilisateurs...');
+    
+    // D'abord, obtenons les dernières données du portfolio pour s'assurer que tout est à jour
+    await getUserPortfolio();
+    
     // Essayer d'abord d'obtenir les données du serveur réel
-    const response = await get(ENDPOINTS.LEADERBOARD);
+    const response = await get(ENDPOINTS.LEADERBOARD, { forceRefresh: true });
     
     // Si la réponse a un format API (avec success et data)
     if (response && response.success && response.data) {
@@ -121,12 +126,45 @@ export const getLeaderboard = async (): Promise<LeaderboardEntry[]> => {
         }
       } : 'Aucun utilisateur dans le classement');
       
+      // Récupérer l'utilisateur actuel pour vérifier si ses données sont cohérentes
+      const currentUser = await getCurrentUser();
+      
+      // Récupérer les données des cryptomonnaies pour calculer la valeur du portefeuille
+      const cryptoData = await fetchTopCryptos(100);
+      
       return response.data.map((entry: any) => {
         // S'assurer que portfolioValue et totalValue sont définis correctement
-        const portfolioValue = typeof entry.portfolioValue === 'number' ? entry.portfolioValue : 0;
-        const totalValue = typeof entry.totalValue === 'number' ? 
+        let portfolioValue = typeof entry.portfolioValue === 'number' ? entry.portfolioValue : 0;
+        let totalValue = typeof entry.totalValue === 'number' ? 
           entry.totalValue : 
           (entry.balance + portfolioValue);
+        
+        // Si c'est l'utilisateur actuel, s'assurer que les données sont cohérentes
+        if (currentUser && entry.userId === currentUser.id) {
+          // Calculer la valeur du portfolio à partir des données locales actuelles
+          const userPortfolioValue = currentUser.portfolio?.reduce((total, item) => {
+            const crypto = cryptoData?.find((c: Cryptocurrency) => c.id === item.cryptoId);
+            if (!crypto) return total;
+            return total + (item.amount * crypto.currentPrice);
+          }, 0) || 0;
+          
+          // Utiliser les données locales pour cet utilisateur
+          const localTotalValue = currentUser.balance + userPortfolioValue;
+          
+          console.log('🔄 Comparaison des valeurs pour l\'utilisateur actuel:', {
+            'API totalValue': totalValue,
+            'Local totalValue': localTotalValue,
+            'API portfolioValue': portfolioValue,
+            'Local portfolioValue': userPortfolioValue,
+            'API balance': entry.balance,
+            'Local balance': currentUser.balance
+          });
+          
+          // Utiliser les valeurs locales qui sont plus à jour
+          portfolioValue = userPortfolioValue;
+          totalValue = localTotalValue;
+          entry.balance = currentUser.balance;
+        }
           
         console.log(`📊 Utilisateur ${entry.username}: Balance=${entry.balance}, PortfolioValue=${portfolioValue}, TotalValue=${totalValue}`);
         
@@ -152,11 +190,44 @@ export const getLeaderboard = async (): Promise<LeaderboardEntry[]> => {
           totalValue: response[0].totalValue
         } : 'Aucun utilisateur dans le classement');
       
+      // Récupérer l'utilisateur actuel pour vérifier si ses données sont cohérentes
+      const currentUser = await getCurrentUser();
+      
+      // Récupérer les données des cryptomonnaies pour calculer la valeur du portefeuille
+      const cryptoData = await fetchTopCryptos(100);
+      
       return response.map(entry => {
-        const portfolioValue = typeof entry.portfolioValue === 'number' ? entry.portfolioValue : 0;
-        const totalValue = typeof entry.totalValue === 'number' ? 
+        let portfolioValue = typeof entry.portfolioValue === 'number' ? entry.portfolioValue : 0;
+        let totalValue = typeof entry.totalValue === 'number' ? 
           entry.totalValue : 
           (entry.balance + portfolioValue);
+        
+        // Si c'est l'utilisateur actuel, s'assurer que les données sont cohérentes
+        if (currentUser && entry.userId === currentUser.id) {
+          // Calculer la valeur du portfolio à partir des données locales actuelles
+          const userPortfolioValue = currentUser.portfolio?.reduce((total, item) => {
+            const crypto = cryptoData?.find((c: Cryptocurrency) => c.id === item.cryptoId);
+            if (!crypto) return total;
+            return total + (item.amount * crypto.currentPrice);
+          }, 0) || 0;
+          
+          // Utiliser les données locales pour cet utilisateur
+          const localTotalValue = currentUser.balance + userPortfolioValue;
+          
+          console.log('🔄 Comparaison des valeurs pour l\'utilisateur actuel:', {
+            'API totalValue': totalValue,
+            'Local totalValue': localTotalValue,
+            'API portfolioValue': portfolioValue,
+            'Local portfolioValue': userPortfolioValue,
+            'API balance': entry.balance,
+            'Local balance': currentUser.balance
+          });
+          
+          // Utiliser les valeurs locales qui sont plus à jour
+          portfolioValue = userPortfolioValue;
+          totalValue = localTotalValue;
+          entry.balance = currentUser.balance;
+        }
         
         return {
           ...entry,
@@ -231,5 +302,17 @@ export const getUserPortfolio = async (): Promise<User | null> => {
     console.error('❌ Erreur lors de la récupération du portefeuille:', error);
     // En cas d'échec, retourner les données utilisateur actuelles
     return await getCurrentUser();
+  }
+};
+
+/**
+ * Vide le cache du classement pour forcer un rechargement depuis l'API
+ */
+export const clearLeaderboardCache = async (): Promise<void> => {
+  try {
+    console.log('🧹 Nettoyage du cache du classement...');
+    await SecureStore.deleteItemAsync(LEADERBOARD_KEY);
+  } catch (error) {
+    console.error('❌ Erreur lors du nettoyage du cache du classement:', error);
   }
 }; 

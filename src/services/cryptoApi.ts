@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Cryptocurrency, PriceHistoryPoint } from '../types';
-import { COINLORE_API_URL, CRYPTO_ICON_URL } from '../config/api';
+import { COINLORE_API_URL } from '../config/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Clés de cache
@@ -101,10 +101,11 @@ const fetchWithRetry = async (url: string, maxRetries = 3): Promise<any> => {
 };
 
 /**
- * Obtenir une URL d'icône pour une crypto
+ * Obtenir une URL d'icône pour une crypto (utilise maintenant une image par défaut)
  */
 const getCryptoIconUrl = (symbol: string): string => {
-  return `${CRYPTO_ICON_URL}${symbol.toLowerCase()}.png`;
+  // Retourne une image par défaut pour toutes les cryptos
+  return 'https://via.placeholder.com/32';
 };
 
 /**
