@@ -15,8 +15,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { MainStackParamList } from '../../navigation';
 import { fetchCryptoDetails, fetchCryptoPriceHistory } from '../../services/cryptoApi';
 import { Cryptocurrency, PriceHistoryPoint } from '../../types';
+import { CRYPTO_ICON_URL } from '../../config/api';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Details'>;
+
+const getCryptoIconUrl = (symbol: string): string => {
+  return `${CRYPTO_ICON_URL}${symbol.toLowerCase()}.png`;
+};
 
 const DetailsScreen: React.FC<Props> = ({ route, navigation }) => {
   const { cryptoId, cryptoName } = route.params;
@@ -26,15 +31,44 @@ const DetailsScreen: React.FC<Props> = ({ route, navigation }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isChartLoading, setIsChartLoading] = useState(true);
 
+  // Définir la fonction loadPriceHistory en dehors des useEffect
+  const loadPriceHistory = async () => {
+    setIsChartLoading(true);
+    try {
+      const history = await fetchCryptoPriceHistory(cryptoId, timeRange);
+      setPriceHistory(history);
+    } catch (error) {
+      console.error('Error loading price history:', error);
+      Alert.alert('Erreur', 'Impossible de charger l\'historique des prix');
+    } finally {
+      setIsChartLoading(false);
+    }
+  };
+
   useEffect(() => {
     const loadCryptoDetails = async () => {
       try {
-        const details = await fetchCryptoDetails(cryptoId);
-        setCrypto(details);
+        setIsLoading(true);
+        const data = await fetchCryptoDetails(cryptoId);
+        setCrypto({
+          id: data.id,
+          name: data.name,
+          symbol: data.symbol,
+          currentPrice: data.market_data?.current_price?.usd || 0,
+          marketCap: data.market_data?.market_cap?.usd || 0,
+          volume24h: data.market_data?.total_volume?.usd || 0,
+          priceChangePercentage24h: data.market_data?.price_change_percentage_24h || 0,
+          image: data.image?.large || getCryptoIconUrl(data.symbol),
+        });
+        setIsLoading(false);
+        // Maintenant loadPriceHistory est accessible ici
+        await loadPriceHistory();
       } catch (error) {
         console.error('Error loading crypto details:', error);
-        Alert.alert('Erreur', 'Impossible de charger les détails de la cryptomonnaie');
-      } finally {
+        Alert.alert(
+          'Erreur',
+          'Impossible de charger les détails de cette cryptomonnaie. Veuillez réessayer.'
+        );
         setIsLoading(false);
       }
     };
@@ -42,24 +76,15 @@ const DetailsScreen: React.FC<Props> = ({ route, navigation }) => {
     loadCryptoDetails();
   }, [cryptoId]);
 
+  // Mettre à jour l'historique des prix lorsque timeRange change
   useEffect(() => {
-    const loadPriceHistory = async () => {
-      setIsChartLoading(true);
-      try {
-        const history = await fetchCryptoPriceHistory(cryptoId, timeRange);
-        setPriceHistory(history);
-      } catch (error) {
-        console.error('Error loading price history:', error);
-        Alert.alert('Erreur', 'Impossible de charger l\'historique des prix');
-      } finally {
-        setIsChartLoading(false);
-      }
-    };
+    if (crypto) { // Ne charger que si nous avons déjà des détails crypto
+      loadPriceHistory();
+    }
+  }, [timeRange, cryptoId]);
 
-    loadPriceHistory();
-  }, [cryptoId, timeRange]);
-
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | undefined) => {
+    if (price === undefined || price === null) return '$0.00';
     if (price >= 1000) {
       return `$${price.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     } else if (price >= 1) {

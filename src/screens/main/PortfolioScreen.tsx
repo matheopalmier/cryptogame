@@ -96,7 +96,7 @@ const PortfolioScreen: React.FC = () => {
               }
 
               // Utiliser des valeurs par défaut si nécessaire
-              const currentPrice = cryptoDetails.current_price || 0;
+              const currentPrice = cryptoDetails.currentPrice || 0;
               const amount = portfolioItem.amount || 0;
               const averageBuyPrice = portfolioItem.averageBuyPrice || 0;
               
@@ -147,43 +147,41 @@ const PortfolioScreen: React.FC = () => {
 
   // Charger les données au montage du composant
   useEffect(() => {
+    console.log('📊 PortfolioScreen: Chargement initial des données');
     loadData();
-  }, [loadData]);
+    
+    // Rafraîchissement automatique toutes les 60 secondes
+    console.log('📊 PortfolioScreen: Configuration du rafraîchissement automatique');
+    const intervalId = setInterval(() => {
+      console.log('📊 PortfolioScreen: Rafraîchissement automatique');
+      loadData(false);
+    }, 60000); // 60 secondes
+    
+    return () => {
+      console.log('📊 PortfolioScreen: Nettoyage du rafraîchissement automatique');
+      clearInterval(intervalId);
+    };
+  }, []); // Aucune dépendance pour éviter les rechargements inutiles
 
   // Actualiser les données lorsque l'écran est de nouveau au premier plan
   useFocusEffect(
     useCallback(() => {
-      console.log('📊 PortfolioScreen: L\'écran est au premier plan, rechargement des données...');
+      console.log('📊 PortfolioScreen: L\'écran est au premier plan');
       
-      // Forcer un délai court pour s'assurer que toutes les opérations précédentes sont terminées
-      const timer = setTimeout(() => {
-        // Forcer une récupération des données utilisateur auprès du serveur
-        const forceRefresh = async () => {
-          try {
-            // Nettoyer les caches locaux si nécessaire
-            console.log("📊 PortfolioScreen: Forçage d'un rechargement complet des données...");
-            
-            // Récupérer explicitement les données utilisateur depuis le serveur 
-            // sans utiliser de cache
-            const userData = await getCurrentUser();
-            console.log("📊 PortfolioScreen: Données utilisateur fraîches récupérées:", userData);
-            
-            // Continuer avec le chargement normal
-            loadData();
-          } catch (error) {
-            console.error("📊 PortfolioScreen: Erreur lors du rechargement forcé:", error);
-            loadData();
-          }
-        };
-        
-        forceRefresh();
-      }, 1000); // Attendre 1 seconde pour s'assurer que les transactions sont bien enregistrées
+      // Vérifier si la dernière mise à jour date de plus de 30 secondes ou est nulle
+      const shouldRefresh = !lastUpdate || new Date().getTime() - lastUpdate.getTime() > 30000;
       
+      if (shouldRefresh) {
+        console.log('📊 PortfolioScreen: Rechargement des données (dernière mise à jour > 30s)');
+        loadData(false); // Ne pas afficher l'indicateur de rafraîchissement
+      } else {
+        console.log('📊 PortfolioScreen: Pas de rechargement nécessaire (dernière mise à jour < 30s)');
+      }
+            
       return () => {
-        clearTimeout(timer);
         console.log('📊 PortfolioScreen: L\'écran n\'est plus au premier plan');
       };
-    }, [loadData])
+    }, []) // Retirer la dépendance sur lastUpdate pour éviter les boucles
   );
 
   const handleRefresh = () => {

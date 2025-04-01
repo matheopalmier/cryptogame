@@ -77,8 +77,9 @@ const TransactionScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const handleMaxAmount = () => {
     if (type === 'buy') {
-      // Pour l'achat, utiliser tout le solde disponible
-      const maxAmount = availableBalance / currentPrice;
+      // Pour l'achat, utiliser 99.5% du solde disponible pour éviter les problèmes d'arrondi
+      const maxAmount = (availableBalance * 0.995) / currentPrice;
+      // Limiter à 8 décimales maximum pour éviter les problèmes d'arrondi
       setAmount(maxAmount.toFixed(8));
     } else {
       // Pour la vente, utiliser tout le montant possédé

@@ -30,6 +30,14 @@ const MarketScreen: React.FC = () => {
   const loadCryptos = useCallback(async () => {
     try {
       const data = await fetchTopCryptos(100);
+      
+      // Debug log pour vérifier la structure des données
+      if (data && data.length > 0) {
+        console.log('Premier élément crypto reçu:', JSON.stringify(data[0], null, 2));
+      } else {
+        console.warn('Aucune donnée crypto reçue');
+      }
+      
       setCryptos(data);
       setFilteredCryptos(data);
     } catch (error) {
@@ -81,7 +89,9 @@ const MarketScreen: React.FC = () => {
     }
   };
 
-  const formatMarketCap = (marketCap: number) => {
+  const formatMarketCap = (marketCap: number | undefined) => {
+    if (marketCap === undefined || marketCap === null) return '$0';
+    
     if (marketCap >= 1_000_000_000) {
       return `$${(marketCap / 1_000_000_000).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} Md`;
     } else if (marketCap >= 1_000_000) {
@@ -92,8 +102,16 @@ const MarketScreen: React.FC = () => {
   };
 
   const renderCryptoItem = ({ item }: { item: Cryptocurrency }) => {
-    const priceChangeColor = (item.priceChangePercentage24h || 0) >= 0 ? '#4CAF50' : '#F44336';
+    // Garantir que toutes les propriétés sont définies
+    const currentPrice = item.currentPrice ?? 0;
+    const marketCap = item.marketCap ?? 0;
+    const volume24h = item.volume24h ?? 0;
     const priceChangePercentage = item.priceChangePercentage24h ?? 0;
+    const cryptoSymbol = item.symbol || 'UNKNOWN';
+    const cryptoName = item.name || 'Unknown Cryptocurrency';
+    const imageUrl = item.image || 'https://via.placeholder.com/32';
+    
+    const priceChangeColor = priceChangePercentage >= 0 ? '#4CAF50' : '#F44336';
     
     return (
       <TouchableOpacity
@@ -101,27 +119,27 @@ const MarketScreen: React.FC = () => {
         onPress={() => 
           navigation.navigate('Details', { 
             cryptoId: item.id, 
-            cryptoName: item.name 
+            cryptoName: cryptoName 
           })
         }
       >
         <View style={styles.cryptoInfo}>
-          <Image source={{ uri: item.image }} style={styles.cryptoIcon} />
+          <Image source={{ uri: imageUrl }} style={styles.cryptoIcon} />
           <View style={styles.cryptoNameContainer}>
-            <Text style={styles.cryptoName}>{item.name}</Text>
-            <Text style={styles.cryptoSymbol}>{item.symbol}</Text>
+            <Text style={styles.cryptoName}>{cryptoName}</Text>
+            <Text style={styles.cryptoSymbol}>{cryptoSymbol}</Text>
           </View>
         </View>
         
         <View style={styles.cryptoPriceContainer}>
-          <Text style={styles.cryptoPrice}>{formatPrice(item.currentPrice)}</Text>
+          <Text style={styles.cryptoPrice}>{formatPrice(currentPrice)}</Text>
           <View style={[styles.priceChangeContainer, { backgroundColor: `${priceChangeColor}20` }]}>
             <Text style={[styles.priceChange, { color: priceChangeColor }]}>
               {priceChangePercentage >= 0 ? '+' : ''}
               {priceChangePercentage.toFixed(2)}%
             </Text>
           </View>
-          <Text style={styles.marketCap}>{formatMarketCap(item.marketCap)}</Text>
+          <Text style={styles.marketCap}>{formatMarketCap(marketCap)}</Text>
         </View>
       </TouchableOpacity>
     );

@@ -27,8 +27,10 @@ const getApiUrl = () => {
 
 export const API_URL = getApiUrl();
 
-// URL de l'API CoinGecko
-export const COINGECKO_API_URL = 'https://api.coingecko.com/api/v3';
+// URL de l'API Coinlore (remplace CoinGecko)
+export const COINLORE_API_URL = 'https://api.coinlore.net/api';
+// URL pour les icônes des cryptomonnaies (utilise CryptoCompare pour les images)
+export const CRYPTO_ICON_URL = 'https://www.cryptocompare.com/media/';
 
 // Endpoints
 export const ENDPOINTS = {
