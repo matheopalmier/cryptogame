@@ -40,7 +40,7 @@ export interface LeaderboardEntry {
   profitPercentage: number;
 }
 
-export type AuthProvider = 'local' | 'google' | 'apple';
+export type AuthProvider = 'local';
 
 export interface Transaction {
   id: string;

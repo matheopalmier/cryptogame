@@ -8,14 +8,12 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
-  Platform,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import * as AppleAuthentication from 'expo-apple-authentication';
 
 import { AuthStackParamList } from '../../navigation';
-import { login, loginWithGoogle, loginWithApple } from '../../services/authService';
+import { login } from '../../services/authService';
 import { useAuth } from '../../contexts/AuthContext';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
@@ -41,30 +39,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       // La navigation va être automatiquement modifiée par l'écouteur d'authentification
     } catch (error) {
       Alert.alert('Erreur de connexion', 'Email ou mot de passe invalide');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    try {
-      await loginWithGoogle();
-      // La navigation va être automatiquement modifiée par l'écouteur d'authentification
-    } catch (error) {
-      Alert.alert('Erreur de connexion', 'Impossible de se connecter avec Google');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAppleLogin = async () => {
-    setIsLoading(true);
-    try {
-      await loginWithApple();
-      // La navigation va être automatiquement modifiée par l'écouteur d'authentification
-    } catch (error) {
-      Alert.alert('Erreur de connexion', 'Impossible de se connecter avec Apple');
     } finally {
       setIsLoading(false);
     }
@@ -106,31 +80,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.buttonText}>Se connecter</Text>
           )}
         </TouchableOpacity>
-
-        <View style={styles.dividerContainer}>
-          <View style={styles.divider} />
-          <Text style={styles.dividerText}>OU</Text>
-          <View style={styles.divider} />
-        </View>
-
-        <TouchableOpacity 
-          style={styles.socialButton} 
-          onPress={handleGoogleLogin}
-          disabled={isLoading}
-        >
-          <Ionicons name="logo-google" size={20} color="#4285F4" />
-          <Text style={styles.socialButtonText}>Continuer avec Google</Text>
-        </TouchableOpacity>
-
-        {Platform.OS === 'ios' && (
-          <AppleAuthentication.AppleAuthenticationButton
-            buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-            cornerRadius={5}
-            style={styles.appleButton}
-            onPress={handleAppleLogin}
-          />
-        )}
 
         <View style={styles.registerContainer}>
           <Text style={styles.registerText}>Vous n'avez pas de compte ?</Text>
@@ -185,46 +134,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 10,
+    marginBottom: 20,
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#ddd',
-  },
-  dividerText: {
-    marginHorizontal: 10,
-    color: '#666',
-  },
-  socialButton: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    height: 50,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  socialButtonText: {
-    marginLeft: 10,
-    fontSize: 16,
-    color: '#333',
-  },
-  appleButton: {
-    height: 50,
-    width: '100%',
-    marginBottom: 15,
   },
   registerContainer: {
     flexDirection: 'row',

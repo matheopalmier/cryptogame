@@ -1,14 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
-import * as Google from 'expo-auth-session/providers/google';
-import * as AppleAuthentication from 'expo-apple-authentication';
-import { AuthProvider, User } from '../types';
+import { User } from '../types';
 import { ENDPOINTS } from '../config/api';
 import { post, get, setAuthToken, removeAuthToken } from './apiService';
-
-// Dans une véritable app, ces identifiants seraient stockés de manière sécurisée
-// et différents selon les environnements
-const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID';
-const API_URL = 'https://your-backend-api.com';
 
 // Clés pour stocker les données d'authentification
 const AUTH_TOKEN_KEY = 'auth_token';
@@ -212,72 +205,6 @@ export const logout = async (): Promise<void> => {
   await removeAuthToken();
   await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
   await SecureStore.deleteItemAsync(USER_DATA_KEY);
-};
-
-// Authentification Google - À connecter avec le backend dans une version future
-export const loginWithGoogle = async (): Promise<User | null> => {
-  try {
-    const [request, response, promptAsync] = Google.useAuthRequest({
-      clientId: GOOGLE_CLIENT_ID,
-    });
-
-    if (response?.type === 'success') {
-      const { authentication } = response;
-      
-      // Dans une version future, envoyer le token au backend
-      // et récupérer les informations utilisateur
-      const mockUser: User = {
-        id: `google_user_${Date.now()}`,
-        username: 'GoogleUser',
-        email: 'google@example.com',
-        balance: 10000,
-        portfolio: [],
-      };
-
-      await SecureStore.setItemAsync(AUTH_TOKEN_KEY, authentication?.accessToken || '');
-      await SecureStore.setItemAsync(USER_DATA_KEY, JSON.stringify(mockUser));
-
-      return mockUser;
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('Error with Google Sign In:', error);
-    return null;
-  }
-};
-
-// Authentification Apple - À connecter avec le backend dans une version future
-export const loginWithApple = async (): Promise<User | null> => {
-  try {
-    const credential = await AppleAuthentication.signInAsync({
-      requestedScopes: [
-        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-        AppleAuthentication.AppleAuthenticationScope.EMAIL,
-      ],
-    });
-
-    if (credential) {
-      // Dans une version future, envoyer le token au backend
-      const mockUser: User = {
-        id: `apple_user_${credential.user}`,
-        username: 'AppleUser',
-        email: credential.email || 'apple@example.com',
-        balance: 10000,
-        portfolio: [],
-      };
-
-      await SecureStore.setItemAsync(AUTH_TOKEN_KEY, credential.identityToken || '');
-      await SecureStore.setItemAsync(USER_DATA_KEY, JSON.stringify(mockUser));
-
-      return mockUser;
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('Error with Apple Sign In:', error);
-    return null;
-  }
 };
 
 // Vérifier si l'utilisateur est connecté
