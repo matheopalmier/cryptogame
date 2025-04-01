@@ -20,6 +20,37 @@ import { User, Transaction, Cryptocurrency } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { fetchTopCryptos } from '../../services/cryptoApi';
 
+// Créer un composant pour l'icône avec un fallback
+interface AssetIconProps {
+  crypto: Cryptocurrency | undefined;
+  assetId: string;
+}
+
+const AssetIcon: React.FC<AssetIconProps> = ({ crypto, assetId }) => {
+  const [hasError, setHasError] = useState(false);
+  
+  return (
+    <View style={styles.assetIconContainer}>
+      {!hasError ? (
+        <Image 
+          source={{ uri: crypto?.image }} 
+          style={styles.assetIcon} 
+          onError={() => {
+            console.log(`Erreur de chargement d'image pour ${crypto?.symbol || assetId}`);
+            setHasError(true);
+          }}
+        />
+      ) : (
+        <View style={styles.fallbackBubble}>
+          <Text style={styles.fallbackText}>
+            {(crypto?.symbol || assetId).slice(0, 2).toUpperCase()}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
 const ProfileScreen: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -370,9 +401,12 @@ const ProfileScreen: React.FC = () => {
             return (
               <View key={asset.cryptoId} style={styles.assetItem}>
                 <View style={styles.assetHeader}>
-                  <Text style={styles.assetName}>
-                    {crypto?.name || asset.cryptoId}
-                  </Text>
+                  <View style={styles.assetNameContainer}>
+                    <AssetIcon crypto={crypto} assetId={asset.cryptoId} />
+                    <Text style={styles.assetName}>
+                      {crypto?.name || asset.cryptoId}
+                    </Text>
+                  </View>
                   <Text style={styles.assetValue}>
                     ${currentValue.toFixed(2)}
                   </Text>
@@ -687,6 +721,27 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 6,
   },
+  assetNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1
+  },
+  assetIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 8,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  assetIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    position: 'absolute',
+  },
   assetName: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -810,6 +865,20 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  fallbackBubble: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+    backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fallbackText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#666',
   },
 });
 

@@ -101,11 +101,28 @@ const fetchWithRetry = async (url: string, maxRetries = 3): Promise<any> => {
 };
 
 /**
- * Obtenir une URL d'icône pour une crypto (utilise maintenant une image par défaut)
+ * Obtenir une URL d'icône pour une crypto basée sur son symbole et son nom
  */
-const getCryptoIconUrl = (symbol: string): string => {
-  // Retourne une image par défaut pour toutes les cryptos
-  return 'https://via.placeholder.com/32';
+const getCryptoIconUrl = (symbol: string, name?: string): string => {
+  if (!symbol) return 'https://via.placeholder.com/32/cccccc/000000?text=?';
+  
+  // Convertir le symbole en minuscules pour compatibilité
+  const symbolLower = symbol.toLowerCase();
+  
+  // Utilisation prioritaire du nom fourni par l'API
+  if (name) {
+    // Formater le nom pour qu'il soit compatible avec le format d'URL de cryptologos.cc
+    // Convertir en minuscules, remplacer les espaces par des tirets
+    const formattedName = name.toLowerCase()
+      .replace(/\s+/g, '-')               // Espaces -> tirets
+      .replace(/[^\w-]/g, '')             // Supprimer caractères spéciaux
+      .replace(/^-+|-+$/g, '');           // Supprimer tirets début/fin
+    
+    return `https://cryptologos.cc/logos/${formattedName}-${symbolLower}-logo.png?v=040`;
+  }
+  
+  // Fallback sur le symbole lui-même si aucun nom n'est fourni
+  return `https://cryptologos.cc/logos/${symbolLower}-${symbolLower}-logo.png?v=040`;
 };
 
 /**
@@ -155,7 +172,7 @@ export const fetchTopCryptos = async (limit = 100): Promise<Cryptocurrency[]> =>
           marketCap, // Nom de propriété mappé correctement selon l'interface
           volume24h, // Nom de propriété mappé correctement selon l'interface
           priceChangePercentage24h, // Nom de propriété mappé correctement selon l'interface
-          image: getCryptoIconUrl(crypto.symbol) // Utiliser une image générique
+          image: getCryptoIconUrl(crypto.symbol, crypto.name) // Passer le nom en plus du symbole
         };
       });
       
@@ -243,8 +260,8 @@ export const fetchCryptoDetails = async (cryptoId: string): Promise<any> => {
         total_supply: parseFloat(cryptoData.tsupply)
       },
       image: {
-        large: getCryptoIconUrl(cryptoData.symbol),
-        small: getCryptoIconUrl(cryptoData.symbol)
+        large: getCryptoIconUrl(cryptoData.symbol, cryptoData.name),
+        small: getCryptoIconUrl(cryptoData.symbol, cryptoData.name)
       },
       last_updated: new Date().toISOString()
     };
@@ -281,7 +298,7 @@ const getMockTopCryptos = (): Cryptocurrency[] => {
       marketCap: 1000000000000, 
       volume24h: 25000000000, 
       priceChangePercentage24h: 2.5, 
-      image: getCryptoIconUrl('BTC') 
+      image: getCryptoIconUrl('BTC', 'Bitcoin') 
     },
     { 
       id: 'ethereum', 
@@ -291,7 +308,7 @@ const getMockTopCryptos = (): Cryptocurrency[] => {
       marketCap: 500000000000, 
       volume24h: 15000000000, 
       priceChangePercentage24h: 1.8, 
-      image: getCryptoIconUrl('ETH') 
+      image: getCryptoIconUrl('ETH', 'Ethereum') 
     },
     { 
       id: 'ripple', 
@@ -301,7 +318,7 @@ const getMockTopCryptos = (): Cryptocurrency[] => {
       marketCap: 50000000000, 
       volume24h: 2000000000, 
       priceChangePercentage24h: -0.5, 
-      image: getCryptoIconUrl('XRP') 
+      image: getCryptoIconUrl('XRP', 'XRP') 
     },
     { 
       id: 'cardano', 
@@ -311,7 +328,7 @@ const getMockTopCryptos = (): Cryptocurrency[] => {
       marketCap: 40000000000, 
       volume24h: 1500000000, 
       priceChangePercentage24h: 0.8, 
-      image: getCryptoIconUrl('ADA') 
+      image: getCryptoIconUrl('ADA', 'Cardano') 
     },
     { 
       id: 'solana', 
@@ -321,7 +338,7 @@ const getMockTopCryptos = (): Cryptocurrency[] => {
       marketCap: 30000000000, 
       volume24h: 2500000000, 
       priceChangePercentage24h: 3.2, 
-      image: getCryptoIconUrl('SOL') 
+      image: getCryptoIconUrl('SOL', 'Solana') 
     },
   ];
 };
