@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { MainStackParamList } from '../../navigation';
 import { fetchTopCryptos } from '../../services/cryptoApi';
 import { Cryptocurrency } from '../../types';
+import { useTheme } from '../../contexts/ThemeContext';
 
 type ScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -26,6 +27,7 @@ const MarketScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { darkMode } = useTheme();
 
   const loadCryptos = useCallback(async () => {
     try {
@@ -115,7 +117,7 @@ const MarketScreen: React.FC = () => {
     
     return (
       <TouchableOpacity
-        style={styles.cryptoItem}
+        style={[styles.cryptoItem, darkMode && styles.darkCryptoItem]}
         onPress={() => 
           navigation.navigate('Details', { 
             cryptoId: item.id, 
@@ -126,20 +128,20 @@ const MarketScreen: React.FC = () => {
         <View style={styles.cryptoInfo}>
           <Image source={{ uri: imageUrl }} style={styles.cryptoIcon} />
           <View style={styles.cryptoNameContainer}>
-            <Text style={styles.cryptoName}>{cryptoName}</Text>
-            <Text style={styles.cryptoSymbol}>{cryptoSymbol}</Text>
+            <Text style={[styles.cryptoName, darkMode && styles.darkText]}>{cryptoName}</Text>
+            <Text style={[styles.cryptoSymbol, darkMode && styles.darkSubtext]}>{cryptoSymbol}</Text>
           </View>
         </View>
         
         <View style={styles.cryptoPriceContainer}>
-          <Text style={styles.cryptoPrice}>{formatPrice(currentPrice)}</Text>
+          <Text style={[styles.cryptoPrice, darkMode && styles.darkText]}>{formatPrice(currentPrice)}</Text>
           <View style={[styles.priceChangeContainer, { backgroundColor: `${priceChangeColor}20` }]}>
             <Text style={[styles.priceChange, { color: priceChangeColor }]}>
               {priceChangePercentage >= 0 ? '+' : ''}
               {priceChangePercentage.toFixed(2)}%
             </Text>
           </View>
-          <Text style={styles.marketCap}>{formatMarketCap(marketCap)}</Text>
+          <Text style={[styles.marketCap, darkMode && styles.darkSubtext]}>{formatMarketCap(marketCap)}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -147,20 +149,21 @@ const MarketScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, darkMode && styles.darkContainer]}>
         <ActivityIndicator size="large" color="#4a89f3" />
-        <Text style={styles.loadingText}>Chargement des cryptomonnaies...</Text>
+        <Text style={[styles.loadingText, darkMode && styles.darkText]}>Chargement des cryptomonnaies...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+    <View style={[styles.container, darkMode && styles.darkContainer]}>
+      <View style={[styles.searchContainer, darkMode && styles.darkSearchContainer]}>
+        <Ionicons name="search" size={20} color={darkMode ? "#aaa" : "#666"} style={styles.searchIcon} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, darkMode && styles.darkSearchInput]}
           placeholder="Rechercher une cryptomonnaie..."
+          placeholderTextColor={darkMode ? "#888" : "#999"}
           value={searchQuery}
           onChangeText={setSearchQuery}
           clearButtonMode="while-editing"
@@ -174,12 +177,18 @@ const MarketScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContainer}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+          <RefreshControl 
+            refreshing={isRefreshing} 
+            onRefresh={handleRefresh} 
+            tintColor={darkMode ? "#fff" : "#4a89f3"}
+          />
         }
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>Marché Crypto</Text>
-            <Text style={styles.headerSubtitle}>Les 100 principales cryptomonnaies par capitalisation</Text>
+            <Text style={[styles.headerTitle, darkMode && styles.darkText]}>Marché Crypto</Text>
+            <Text style={[styles.headerSubtitle, darkMode && styles.darkSubtext]}>
+              Les 100 principales cryptomonnaies par capitalisation
+            </Text>
           </View>
         }
       />
@@ -192,6 +201,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  darkContainer: {
+    backgroundColor: '#121212',
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -202,6 +214,23 @@ const styles = StyleSheet.create({
     marginTop: 10,
     color: '#666',
     fontSize: 16,
+  },
+  darkText: {
+    color: '#fff',
+  },
+  darkSubtext: {
+    color: '#aaa',
+  },
+  darkCryptoItem: {
+    backgroundColor: '#1e1e1e',
+    borderBottomColor: '#2c2c2c',
+  },
+  darkSearchContainer: {
+    backgroundColor: '#1e1e1e',
+    borderColor: '#2c2c2c',
+  },
+  darkSearchInput: {
+    color: '#fff',
   },
   header: {
     paddingHorizontal: 16,

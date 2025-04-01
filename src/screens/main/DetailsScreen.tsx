@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { MainStackParamList } from '../../navigation';
 import { fetchCryptoDetails, fetchCryptoPriceHistory } from '../../services/cryptoApi';
 import { Cryptocurrency, PriceHistoryPoint } from '../../types';
+import { useTheme } from '../../contexts/ThemeContext';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Details'>;
 
@@ -30,6 +31,7 @@ const DetailsScreen: React.FC<Props> = ({ route, navigation }) => {
   const [timeRange, setTimeRange] = useState<number>(7); // jours
   const [isLoading, setIsLoading] = useState(true);
   const [isChartLoading, setIsChartLoading] = useState(true);
+  const { darkMode } = useTheme();
 
   // Définir la fonction loadPriceHistory en dehors des useEffect
   const loadPriceHistory = async () => {
@@ -123,18 +125,22 @@ const DetailsScreen: React.FC<Props> = ({ route, navigation }) => {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, darkMode && styles.darkContainer]}>
         <ActivityIndicator size="large" color="#4a89f3" />
-        <Text style={styles.loadingText}>Chargement des détails...</Text>
+        <Text style={[styles.loadingText, darkMode && styles.darkText]}>
+          Chargement des détails...
+        </Text>
       </View>
     );
   }
 
   if (!crypto) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, darkMode && styles.darkContainer]}>
         <Ionicons name="alert-circle-outline" size={50} color="#F44336" />
-        <Text style={styles.errorText}>Impossible de charger les détails</Text>
+        <Text style={[styles.errorText, darkMode && styles.darkText]}>
+          Impossible de charger les détails
+        </Text>
         <TouchableOpacity
           style={styles.errorButton}
           onPress={() => navigation.goBack()}
@@ -164,11 +170,13 @@ const DetailsScreen: React.FC<Props> = ({ route, navigation }) => {
   };
 
   const chartConfig = {
-    backgroundGradientFrom: '#fff',
-    backgroundGradientTo: '#fff',
+    backgroundGradientFrom: darkMode ? '#1e1e1e' : '#fff',
+    backgroundGradientTo: darkMode ? '#1e1e1e' : '#fff',
     decimalPlaces: 2,
     color: (opacity = 1) => `rgba(74, 137, 243, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(102, 102, 102, ${opacity})`,
+    labelColor: (opacity = 1) => darkMode 
+      ? `rgba(255, 255, 255, ${opacity})` 
+      : `rgba(102, 102, 102, ${opacity})`,
     style: {
       borderRadius: 16,
     },
@@ -182,11 +190,13 @@ const DetailsScreen: React.FC<Props> = ({ route, navigation }) => {
   const priceChangeColor = crypto.priceChangePercentage24h >= 0 ? '#4CAF50' : '#F44336';
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
+    <ScrollView style={[styles.container, darkMode && styles.darkContainer]}>
+      <View style={[styles.header, darkMode && styles.darkHeader]}>
         <View style={styles.priceContainer}>
-          <Text style={styles.priceLabel}>Prix actuel</Text>
-          <Text style={styles.price}>{formatPrice(crypto.currentPrice)}</Text>
+          <Text style={[styles.priceLabel, darkMode && styles.darkText]}>Prix actuel</Text>
+          <Text style={[styles.price, darkMode && styles.darkText]}>
+            {formatPrice(crypto.currentPrice)}
+          </Text>
           <View style={[styles.priceChangeContainer, { backgroundColor: `${priceChangeColor}20` }]}>
             <Text style={[styles.priceChange, { color: priceChangeColor }]}>
               {crypto.priceChangePercentage24h >= 0 ? '+' : ''}
@@ -196,44 +206,96 @@ const DetailsScreen: React.FC<Props> = ({ route, navigation }) => {
         </View>
       </View>
 
-      <View style={styles.chartContainer}>
+      <View style={[styles.chartContainer, darkMode && styles.darkChartContainer]}>
         <View style={styles.timeRangeSelector}>
           <TouchableOpacity
-            style={[styles.timeRangeButton, timeRange === 1 && styles.timeRangeButtonActive]}
+            style={[
+              styles.timeRangeButton,
+              timeRange === 1 && styles.timeRangeButtonActive,
+              darkMode && styles.darkTimeRangeButton,
+              timeRange === 1 && darkMode && styles.darkTimeRangeButtonActive
+            ]}
             onPress={() => setTimeRange(1)}
           >
-            <Text style={[styles.timeRangeText, timeRange === 1 && styles.timeRangeTextActive]}>1J</Text>
+            <Text 
+              style={[
+                styles.timeRangeButtonText,
+                timeRange === 1 && styles.timeRangeButtonTextActive,
+                darkMode && styles.darkTimeRangeButtonText,
+                timeRange === 1 && darkMode && styles.darkTimeRangeButtonTextActive
+              ]}
+            >
+              1J
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.timeRangeButton, timeRange === 7 && styles.timeRangeButtonActive]}
+            style={[
+              styles.timeRangeButton,
+              timeRange === 7 && styles.timeRangeButtonActive,
+              darkMode && styles.darkTimeRangeButton,
+              timeRange === 7 && darkMode && styles.darkTimeRangeButtonActive
+            ]}
             onPress={() => setTimeRange(7)}
           >
-            <Text style={[styles.timeRangeText, timeRange === 7 && styles.timeRangeTextActive]}>7J</Text>
+            <Text 
+              style={[
+                styles.timeRangeButtonText,
+                timeRange === 7 && styles.timeRangeButtonTextActive,
+                darkMode && styles.darkTimeRangeButtonText,
+                timeRange === 7 && darkMode && styles.darkTimeRangeButtonTextActive
+              ]}
+            >
+              7J
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.timeRangeButton, timeRange === 30 && styles.timeRangeButtonActive]}
+            style={[
+              styles.timeRangeButton,
+              timeRange === 30 && styles.timeRangeButtonActive,
+              darkMode && styles.darkTimeRangeButton,
+              timeRange === 30 && darkMode && styles.darkTimeRangeButtonActive
+            ]}
             onPress={() => setTimeRange(30)}
           >
-            <Text style={[styles.timeRangeText, timeRange === 30 && styles.timeRangeTextActive]}>1M</Text>
+            <Text 
+              style={[
+                styles.timeRangeButtonText,
+                timeRange === 30 && styles.timeRangeButtonTextActive,
+                darkMode && styles.darkTimeRangeButtonText,
+                timeRange === 30 && darkMode && styles.darkTimeRangeButtonTextActive
+              ]}
+            >
+              30J
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.timeRangeButton, timeRange === 90 && styles.timeRangeButtonActive]}
+            style={[
+              styles.timeRangeButton,
+              timeRange === 90 && styles.timeRangeButtonActive,
+              darkMode && styles.darkTimeRangeButton,
+              timeRange === 90 && darkMode && styles.darkTimeRangeButtonActive
+            ]}
             onPress={() => setTimeRange(90)}
           >
-            <Text style={[styles.timeRangeText, timeRange === 90 && styles.timeRangeTextActive]}>3M</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.timeRangeButton, timeRange === 365 && styles.timeRangeButtonActive]}
-            onPress={() => setTimeRange(365)}
-          >
-            <Text style={[styles.timeRangeText, timeRange === 365 && styles.timeRangeTextActive]}>1A</Text>
+            <Text 
+              style={[
+                styles.timeRangeButtonText,
+                timeRange === 90 && styles.timeRangeButtonTextActive,
+                darkMode && styles.darkTimeRangeButtonText,
+                timeRange === 90 && darkMode && styles.darkTimeRangeButtonTextActive
+              ]}
+            >
+              90J
+            </Text>
           </TouchableOpacity>
         </View>
 
         {isChartLoading ? (
-          <View style={styles.chartLoadingContainer}>
+          <View style={[styles.chartLoading, darkMode && styles.darkChartLoading]}>
             <ActivityIndicator size="small" color="#4a89f3" />
-            <Text style={styles.chartLoadingText}>Chargement du graphique...</Text>
+            <Text style={[styles.chartLoadingText, darkMode && styles.darkText]}>
+              Chargement du graphique...
+            </Text>
           </View>
         ) : (
           <LineChart
@@ -251,18 +313,22 @@ const DetailsScreen: React.FC<Props> = ({ route, navigation }) => {
         )}
       </View>
 
-      <View style={styles.infoContainer}>
+      <View style={[styles.infoContainer, darkMode && styles.darkInfoContainer]}>
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Symbole</Text>
-          <Text style={styles.infoValue}>{crypto.symbol}</Text>
+          <Text style={[styles.infoLabel, darkMode && styles.darkText]}>Symbole</Text>
+          <Text style={[styles.infoValue, darkMode && styles.darkText]}>{crypto.symbol}</Text>
         </View>
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Capitalisation</Text>
-          <Text style={styles.infoValue}>${crypto.marketCap.toLocaleString('fr-FR')}</Text>
+          <Text style={[styles.infoLabel, darkMode && styles.darkText]}>Capitalisation</Text>
+          <Text style={[styles.infoValue, darkMode && styles.darkText]}>
+            ${crypto.marketCap.toLocaleString('fr-FR')}
+          </Text>
         </View>
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Volume (24h)</Text>
-          <Text style={styles.infoValue}>${crypto.volume24h.toLocaleString('fr-FR')}</Text>
+          <Text style={[styles.infoLabel, darkMode && styles.darkText]}>Volume (24h)</Text>
+          <Text style={[styles.infoValue, darkMode && styles.darkText]}>
+            ${crypto.volume24h.toLocaleString('fr-FR')}
+          </Text>
         </View>
       </View>
 
@@ -288,6 +354,39 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  darkContainer: {
+    backgroundColor: '#121212',
+  },
+  darkHeader: {
+    backgroundColor: '#1e1e1e',
+  },
+  darkText: {
+    color: '#fff',
+  },
+  darkSubtext: {
+    color: '#aaa',
+  },
+  darkChartContainer: {
+    backgroundColor: '#1e1e1e',
+  },
+  darkChartLoading: {
+    backgroundColor: '#1e1e1e',
+  },
+  darkStatsContainer: {
+    backgroundColor: '#1e1e1e',
+  },
+  darkTimeRangeButton: {
+    backgroundColor: '#2c2c2c',
+  },
+  darkTimeRangeButtonActive: {
+    backgroundColor: '#4a89f380',
+  },
+  darkTimeRangeButtonText: {
+    color: '#aaa',
+  },
+  darkTimeRangeButtonTextActive: {
+    color: '#fff',
   },
   loadingContainer: {
     flex: 1,
@@ -372,19 +471,19 @@ const styles = StyleSheet.create({
   timeRangeButtonActive: {
     backgroundColor: '#4a89f3',
   },
-  timeRangeText: {
+  timeRangeButtonText: {
     fontSize: 12,
     color: '#666',
     fontWeight: '500',
   },
-  timeRangeTextActive: {
+  timeRangeButtonTextActive: {
     color: '#fff',
   },
   chart: {
     marginVertical: 8,
     borderRadius: 16,
   },
-  chartLoadingContainer: {
+  chartLoading: {
     height: 220,
     justifyContent: 'center',
     alignItems: 'center',
@@ -438,6 +537,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  darkInfoContainer: {
+    backgroundColor: '#1e1e1e',
   },
 });
 

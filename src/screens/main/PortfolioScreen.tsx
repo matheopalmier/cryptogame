@@ -19,6 +19,7 @@ import { getCurrentUser } from '../../services/authService';
 import { getUserPortfolio } from '../../services/gameService';
 import { fetchTopCryptos, clearCryptoCache } from '../../services/cryptoApi';
 import { User, Cryptocurrency, PortfolioItem } from '../../types';
+import { useTheme } from '../../contexts/ThemeContext';
 
 type StackNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 type TabNavigationProp = BottomTabNavigationProp<MainTabsParamList>;
@@ -43,6 +44,7 @@ const PortfolioScreen: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [refreshError, setRefreshError] = useState<string | null>(null);
+  const { darkMode } = useTheme();
 
   const loadData = async (showRefreshIndicator = true) => {
     try {
@@ -244,30 +246,35 @@ const PortfolioScreen: React.FC = () => {
   };
 
   const renderPortfolioItem = ({ item }: { item: PortfolioItemWithDetails }) => {
-    const profitLossColor = item.profitLoss >= 0 ? '#4CAF50' : '#F44336';
-    
     return (
       <TouchableOpacity
-        style={styles.portfolioItem}
+        style={[styles.portfolioItem, darkMode && styles.darkPortfolioItem]}
         onPress={() => handleCryptoPress(item.cryptoId, item.name)}
       >
-        <View style={styles.itemLeftContainer}>
+        <View style={styles.cryptoInfo}>
           <Image source={{ uri: item.image }} style={styles.cryptoIcon} />
-          <View style={styles.cryptoInfo}>
-            <Text style={styles.cryptoName}>{item.name}</Text>
-            <Text style={styles.cryptoSymbol}>{item.symbol}</Text>
+          <View style={styles.cryptoDetails}>
+            <Text style={[styles.cryptoName, darkMode && styles.darkText]}>
+              {item.name}
+            </Text>
+            <Text style={[styles.cryptoAmount, darkMode && styles.darkSubtext]}>
+              {item.amount.toFixed(6)} {item.symbol}
+            </Text>
           </View>
         </View>
         
-        <View style={styles.itemRightContainer}>
-          <Text style={styles.cryptoValue}>{formatPrice(item.totalValue)}</Text>
-          <View style={[styles.profitLossContainer, { backgroundColor: `${profitLossColor}20` }]}>
-            <Text style={[styles.profitLossText, { color: profitLossColor }]}>
-              {item.profitLoss >= 0 ? '+' : ''}
-              {item.profitLossPercentage.toFixed(2)}%
-            </Text>
-          </View>
-          <Text style={styles.cryptoAmount}>{item.amount.toFixed(4)} {item.symbol}</Text>
+        <View style={styles.valueInfo}>
+          <Text style={[styles.itemValue, darkMode && styles.darkText]}>
+            ${item.totalValue.toFixed(2)}
+          </Text>
+          
+          <Text style={[
+            styles.profitLossText,
+            { color: item.profitLoss >= 0 ? '#4CAF50' : '#F44336' }
+          ]}>
+            {item.profitLoss >= 0 ? '+' : ''}
+            {item.profitLossPercentage.toFixed(2)}%
+          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -275,17 +282,23 @@ const PortfolioScreen: React.FC = () => {
 
   const renderEmptyPortfolio = () => {
     return (
-      <View style={styles.emptyContainer}>
-        <Ionicons name="wallet-outline" size={60} color="#ccc" />
-        <Text style={styles.emptyTitle}>Portefeuille vide</Text>
-        <Text style={styles.emptyMessage}>
-          Vous n'avez pas encore acheté de cryptomonnaies.
+      <View style={[styles.emptyContainer, darkMode && styles.darkEmptyContainer]}>
+        <Ionicons 
+          name="wallet-outline" 
+          size={80} 
+          color={darkMode ? "#555" : "#ddd"} 
+        />
+        <Text style={[styles.emptyTitle, darkMode && styles.darkText]}>
+          Portefeuille vide
+        </Text>
+        <Text style={[styles.emptyText, darkMode && styles.darkSubtext]}>
+          Vous n'avez pas encore d'actifs dans votre portefeuille.
         </Text>
         <TouchableOpacity
-          style={styles.emptyButton}
+          style={styles.startButton}
           onPress={() => tabNavigation.navigate('Market')}
         >
-          <Text style={styles.emptyButtonText}>Explorer le marché</Text>
+          <Text style={styles.startButtonText}>Explorer le marché</Text>
         </TouchableOpacity>
       </View>
     );
@@ -293,9 +306,11 @@ const PortfolioScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, darkMode && styles.darkContainer]}>
         <ActivityIndicator size="large" color="#4a89f3" />
-        <Text style={styles.loadingText}>Chargement du portefeuille...</Text>
+        <Text style={[styles.loadingText, darkMode && styles.darkText]}>
+          Chargement de votre portefeuille...
+        </Text>
       </View>
     );
   }
@@ -308,43 +323,47 @@ const PortfolioScreen: React.FC = () => {
     : 0;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Mon Portefeuille</Text>
+    <SafeAreaView style={[styles.container, darkMode && styles.darkContainer]}>
+      <View style={[styles.header, darkMode && styles.darkHeader]}>
+        <Text style={[styles.headerTitle, darkMode && styles.darkText]}>Mon Portefeuille</Text>
         {/* Ajouter des informations sur la dernière mise à jour */}
         <View style={styles.updateInfo}>
-          <Text style={styles.updateText}>
+          <Text style={[styles.updateText, darkMode && styles.darkSubtext]}>
             Dernière mise à jour: {formatTimeAgo(lastUpdate)}
           </Text>
           <TouchableOpacity 
             onPress={handleForceRefresh} 
             disabled={isRefreshing}
-            style={styles.refreshButton}
+            style={[styles.refreshButton, darkMode && styles.darkRefreshButton]}
           >
             {isRefreshing ? (
-              <ActivityIndicator size="small" color="white" />
+              <ActivityIndicator size="small" color={darkMode ? "#333" : "white"} />
             ) : (
-              <Text style={styles.refreshButtonText}>Actualiser</Text>
+              <Text style={[styles.refreshButtonText, darkMode && styles.darkRefreshButtonText]}>Actualiser</Text>
             )}
           </TouchableOpacity>
         </View>
       </View>
 
       {refreshError ? (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{refreshError}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
+        <View style={[styles.errorContainer, darkMode && styles.darkContainer]}>
+          <Ionicons name="alert-circle-outline" size={64} color={darkMode ? "#aaa" : "#666"} />
+          <Text style={[styles.errorText, darkMode && styles.darkText]}>{refreshError}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton} 
+            onPress={handleForceRefresh}
+          >
             <Text style={styles.retryButtonText}>Réessayer</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.container}>
-          <View style={styles.balanceCard}>
-            <Text style={styles.balanceLabel}>Valeur totale</Text>
-            <Text style={styles.balanceValue}>{formatPrice(totalValue)}</Text>
+          <View style={[styles.balanceCard, darkMode && styles.darkBalanceCard]}>
+            <Text style={[styles.balanceLabel, darkMode && styles.darkSubtext]}>Valeur totale</Text>
+            <Text style={[styles.balanceValue, darkMode && styles.darkText]}>{formatPrice(totalValue)}</Text>
             
-            <View style={styles.profitLossRow}>
-              <Text style={styles.profitLossLabel}>Profit/Perte</Text>
+            <View style={[styles.profitLossRow, darkMode && styles.darkProfitLossRow]}>
+              <Text style={[styles.profitLossLabel, darkMode && styles.darkSubtext]}>Profit/Perte</Text>
               <View style={styles.profitLossValueContainer}>
                 <Text 
                   style={[
@@ -370,10 +389,15 @@ const PortfolioScreen: React.FC = () => {
               contentContainerStyle={styles.listContainer}
               showsVerticalScrollIndicator={false}
               refreshControl={
-                <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+                <RefreshControl 
+                  refreshing={isRefreshing} 
+                  onRefresh={handleRefresh} 
+                  colors={['#4a89f3']}
+                  tintColor={darkMode ? "#fff" : "#4a89f3"} 
+                />
               }
               ListHeaderComponent={
-                <Text style={styles.sectionTitle}>Vos actifs</Text>
+                <Text style={[styles.sectionTitle, darkMode && styles.darkText]}>Vos actifs</Text>
               }
             />
           ) : (
@@ -391,6 +415,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  darkContainer: {
+    backgroundColor: '#121212',
+  },
+  darkText: {
+    color: '#fff',
+  },
+  darkSubtext: {
+    color: '#aaa',
+  },
+  darkSummaryContainer: {
+    backgroundColor: '#1e1e1e',
+  },
+  darkSectionHeader: {
+    backgroundColor: '#1e1e1e',
+    borderBottomColor: '#2c2c2c',
+  },
+  darkPortfolioItem: {
+    backgroundColor: '#1e1e1e',
+    borderBottomColor: '#2c2c2c',
+  },
+  darkEmptyContainer: {
+    backgroundColor: '#121212',
   },
   loadingContainer: {
     flex: 1,
@@ -464,7 +511,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  itemLeftContainer: {
+  cryptoInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
@@ -475,7 +522,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     marginRight: 12,
   },
-  cryptoInfo: {
+  cryptoDetails: {
     flex: 1,
   },
   cryptoName: {
@@ -483,32 +530,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
-  cryptoSymbol: {
-    fontSize: 14,
-    color: '#666',
-  },
-  itemRightContainer: {
-    alignItems: 'flex-end',
-  },
-  cryptoValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  profitLossContainer: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginTop: 2,
-  },
-  profitLossText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
   cryptoAmount: {
     fontSize: 12,
     color: '#666',
     marginTop: 2,
+  },
+  valueInfo: {
+    alignItems: 'flex-end',
+  },
+  itemValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  profitLossText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   emptyListContainer: {
     flex: 1,
@@ -526,19 +563,19 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
   },
-  emptyMessage: {
+  emptyText: {
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
     marginBottom: 30,
   },
-  emptyButton: {
+  startButton: {
     backgroundColor: '#4a89f3',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
   },
-  emptyButtonText: {
+  startButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
@@ -596,6 +633,22 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
+  darkHeader: {
+    borderBottomColor: '#2c2c2c',
+  },
+  darkRefreshButton: {
+    backgroundColor: '#2c2c2c',
+  },
+  darkRefreshButtonText: {
+    color: '#fff',
+  },
+  darkBalanceCard: {
+    backgroundColor: '#1e1e1e',
+    shadowColor: '#000',
+  },
+  darkProfitLossRow: {
+    borderTopColor: '#2c2c2c',
+  }
 });
 
 export default PortfolioScreen; 

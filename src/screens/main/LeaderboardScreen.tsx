@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import * as gameService from '../../services/gameService';
 import { LeaderboardEntry } from '../../types';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +19,7 @@ const LeaderboardScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const { user } = useAuth();
+  const { darkMode } = useTheme();
 
   // Charger les données au montage du composant
   useEffect(() => {
@@ -126,25 +128,27 @@ const LeaderboardScreen: React.FC = () => {
     return (
       <View style={[
         styles.itemContainer, 
-        isCurrentUser && styles.currentUserContainer
+        isCurrentUser && styles.currentUserContainer,
+        darkMode && styles.darkItemContainer,
+        isCurrentUser && darkMode && styles.darkCurrentUserContainer
       ]}>
         <View style={styles.rankContainer}>
-          <Text style={styles.rankText}>{index + 1}</Text>
+          <Text style={[styles.rankText, darkMode && styles.darkText]}>{index + 1}</Text>
         </View>
         
         <View style={styles.userInfo}>
-          <Text style={styles.username}>
+          <Text style={[styles.username, darkMode && styles.darkText]}>
             {item.username}
             {isCurrentUser && ' (Vous)'}
           </Text>
         </View>
         
         <View style={styles.valueContainer}>
-          <Text style={styles.valueText}>
+          <Text style={[styles.valueText, darkMode && styles.darkText]}>
             {formatCurrency(totalValue)}
           </Text>
           <View style={styles.detailRow}>
-            <Text style={styles.detailText}>
+            <Text style={[styles.detailText, darkMode && styles.darkSubtext]}>
               {formatCurrency(balance)} + {formatCurrency(portfolioValue)}
             </Text>
           </View>
@@ -162,7 +166,7 @@ const LeaderboardScreen: React.FC = () => {
 
   if (loading && leaderboard.length === 0) {
     return (
-      <View style={styles.centered}>
+      <View style={[styles.centered, darkMode && styles.darkContainer]}>
         <ActivityIndicator size="large" color="#4a89f3" />
       </View>
     );
@@ -170,8 +174,8 @@ const LeaderboardScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>{error}</Text>
+      <View style={[styles.centered, darkMode && styles.darkContainer]}>
+        <Text style={[styles.errorText, darkMode && styles.darkText]}>{error}</Text>
         <TouchableOpacity
           style={styles.retryButton}
           onPress={() => fetchLeaderboard()}
@@ -183,25 +187,25 @@ const LeaderboardScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Classement des Traders</Text>
-        <Text style={styles.headerSubtitle}>
+    <View style={[styles.container, darkMode && styles.darkContainer]}>
+      <View style={[styles.header, darkMode && styles.darkHeader]}>
+        <Text style={[styles.headerTitle, darkMode && styles.darkHeaderTitle]}>Classement des Traders</Text>
+        <Text style={[styles.headerSubtitle, darkMode && styles.darkHeaderSubtitle]}>
           Basé sur la valeur totale (solde + actifs)
         </Text>
         <View style={styles.updateInfo}>
-          <Text style={styles.updateText}>
+          <Text style={[styles.updateText, darkMode && styles.darkUpdateText]}>
             Dernière mise à jour: {formatTimeAgo(lastUpdate)}
           </Text>
           <TouchableOpacity 
             onPress={() => fetchLeaderboard()} 
             disabled={loading}
-            style={styles.refreshButton}
+            style={[styles.refreshButton, darkMode && styles.darkRefreshButton]}
           >
             {loading ? (
-              <ActivityIndicator size="small" color="white" />
+              <ActivityIndicator size="small" color={darkMode ? "#333" : "white"} />
             ) : (
-              <Text style={styles.refreshButtonText}>Actualiser</Text>
+              <Text style={[styles.refreshButtonText, darkMode && styles.darkRefreshButtonText]}>Actualiser</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -218,9 +222,9 @@ const LeaderboardScreen: React.FC = () => {
           onRefresh={() => fetchLeaderboard()}
         />
       ) : (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="trophy-outline" size={60} color="#ccc" />
-          <Text style={styles.emptyText}>
+        <View style={[styles.emptyContainer, darkMode && styles.darkEmptyContainer]}>
+          <Ionicons name="trophy-outline" size={60} color={darkMode ? "#555" : "#ccc"} />
+          <Text style={[styles.emptyText, darkMode && styles.darkText]}>
             Aucune donnée de classement disponible pour le moment.
           </Text>
         </View>
@@ -233,6 +237,43 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  darkContainer: {
+    backgroundColor: '#121212',
+  },
+  darkText: {
+    color: '#fff',
+  },
+  darkSubtext: {
+    color: '#aaa',
+  },
+  darkItemContainer: {
+    backgroundColor: '#1e1e1e',
+    borderBottomColor: '#2c2c2c',
+  },
+  darkCurrentUserContainer: {
+    backgroundColor: '#2c3b52',
+  },
+  darkHeader: {
+    backgroundColor: '#1e3a70',
+  },
+  darkHeaderTitle: {
+    color: '#fff',
+  },
+  darkHeaderSubtitle: {
+    color: '#ccc',
+  },
+  darkUpdateText: {
+    color: '#ccc',
+  },
+  darkRefreshButton: {
+    backgroundColor: '#2c3b52',
+  },
+  darkRefreshButtonText: {
+    color: '#fff',
+  },
+  darkEmptyContainer: {
+    backgroundColor: '#121212',
   },
   centered: {
     flex: 1,

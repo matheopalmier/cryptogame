@@ -3,6 +3,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import AppNavigator from './src/navigation';
 import { AuthProvider } from './src/contexts/AuthContext';
+import { ThemeProvider } from './src/contexts/ThemeContext';
 import { isAuthenticated } from './src/services/authService';
 
 export default function App() {
@@ -23,8 +24,10 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <StatusBar style="auto" />
-        <AppNavigator />
+        <ThemeProvider>
+          <StatusBar style="auto" />
+          <AppNavigator />
+        </ThemeProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

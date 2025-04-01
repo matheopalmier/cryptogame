@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
+import { NavigationContainer, NavigationContainerRef, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +7,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { isAuthenticated } from '../services/authService';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Écrans d'authentification
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -56,6 +57,7 @@ const Tab = createBottomTabNavigator<MainTabsParamList>();
 const MainTabs = ({ route }: any) => {
   // Récupérer l'onglet initial des paramètres de route, s'il existe
   const initialTab = route.params?.initialTab;
+  const { darkMode } = useTheme();
 
   return (
     <Tab.Navigator
@@ -79,7 +81,23 @@ const MainTabs = ({ route }: any) => {
           return <Ionicons name={iconName as any} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#4a89f3',
-        tabBarInactiveTintColor: 'gray',
+        tabBarInactiveTintColor: darkMode ? '#aaa' : 'gray',
+        tabBarStyle: {
+          backgroundColor: darkMode ? '#121212' : '#fff',
+          borderTopColor: darkMode ? '#2c2c2c' : '#e0e0e0',
+        },
+        tabBarLabelStyle: {
+          color: darkMode ? '#fff' : '#333',
+        },
+        headerStyle: {
+          backgroundColor: darkMode ? '#121212' : '#fff',
+          borderBottomColor: darkMode ? '#2c2c2c' : '#e0e0e0',
+          borderBottomWidth: 1,
+        },
+        headerTitleStyle: {
+          color: darkMode ? '#fff' : '#333',
+        },
+        headerTintColor: darkMode ? '#fff' : '#333',
       })}
     >
       <Tab.Screen 
@@ -108,8 +126,23 @@ const MainTabs = ({ route }: any) => {
 
 // Navigateur pour les écrans authentifiés
 const MainNavigator = () => {
+  const { darkMode } = useTheme();
+  
   return (
-    <MainStack.Navigator>
+    <MainStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: darkMode ? '#121212' : '#fff',
+        },
+        headerTitleStyle: {
+          color: darkMode ? '#fff' : '#333',
+        },
+        headerTintColor: darkMode ? '#fff' : '#333',
+        contentStyle: {
+          backgroundColor: darkMode ? '#121212' : '#fff',
+        }
+      }}
+    >
       <MainStack.Screen 
         name="Marché" 
         component={MainTabs} 
@@ -135,8 +168,23 @@ const MainNavigator = () => {
 
 // Navigateur pour les écrans d'authentification
 const AuthNavigator = () => {
+  const { darkMode } = useTheme();
+  
   return (
-    <AuthStack.Navigator>
+    <AuthStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: darkMode ? '#121212' : '#fff',
+        },
+        headerTitleStyle: {
+          color: darkMode ? '#fff' : '#333',
+        },
+        headerTintColor: darkMode ? '#fff' : '#333',
+        contentStyle: {
+          backgroundColor: darkMode ? '#121212' : '#fff',
+        }
+      }}
+    >
       <AuthStack.Screen 
         name="Login" 
         component={LoginScreen} 
@@ -155,6 +203,7 @@ const AuthNavigator = () => {
 const AppNavigator = () => {
   // Utiliser le contexte d'authentification
   const { isAuthenticated, isLoading } = useAuth();
+  const { darkMode } = useTheme();
 
   // Vérifier si l'utilisateur est authentifié après chaque changement d'écran 
   // pour rediriger vers la page de connexion si nécessaire
@@ -178,7 +227,12 @@ const AppNavigator = () => {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ 
+        flex: 1, 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        backgroundColor: darkMode ? '#121212' : '#fff'
+      }}>
         <ActivityIndicator size="large" color="#4a89f3" />
       </View>
     );
@@ -188,6 +242,7 @@ const AppNavigator = () => {
     <NavigationContainer 
       ref={navigationRef}
       onStateChange={onStateChange}
+      theme={darkMode ? DarkTheme : DefaultTheme}
     >
       {isAuthenticated ? <MainNavigator /> : <AuthNavigator />}
     </NavigationContainer>

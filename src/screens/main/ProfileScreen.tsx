@@ -18,6 +18,7 @@ import { getCurrentUser } from '../../services/authService';
 import { getTransactionHistory } from '../../services/gameService';
 import { User, Transaction, Cryptocurrency } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { fetchTopCryptos } from '../../services/cryptoApi';
 
 // Créer un composant pour l'icône avec un fallback
@@ -57,11 +58,10 @@ const ProfileScreen: React.FC = () => {
   const [cryptos, setCryptos] = useState<Cryptocurrency[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-  const [notifications, setNotifications] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const navigation = useNavigation();
   const { logout } = useAuth();
+  const { darkMode, toggleDarkMode } = useTheme();
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const loadData = useCallback(async (showRefreshIndicator = true) => {
@@ -211,16 +211,6 @@ const ProfileScreen: React.FC = () => {
     );
   };
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    // Dans une vraie application, vous enregistreriez ce choix
-  };
-
-  const toggleNotifications = () => {
-    setNotifications(!notifications);
-    // Dans une vraie application, vous enregistreriez ce choix
-  };
-
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
     return date.toLocaleDateString('fr-FR', {
@@ -282,101 +272,110 @@ const ProfileScreen: React.FC = () => {
 
   return (
     <ScrollView 
-      style={styles.container}
+      style={[styles.container, darkMode && styles.darkContainer]}
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing}
           onRefresh={handleRefresh}
           colors={['#4a89f3']}
-          tintColor="#4a89f3"
+          tintColor={darkMode ? "#fff" : "#4a89f3"}
         />
       }
     >
-      <View style={styles.header}>
+      <View style={[styles.header, darkMode && styles.darkHeader]}>
         <View style={styles.avatarContainer}>
           {user.avatar ? (
             <Image source={{ uri: user.avatar }} style={styles.avatar} />
           ) : (
-            <Ionicons name="person-circle" size={80} color="#4a89f3" />
+            <Ionicons name="person-circle" size={80} color={darkMode ? "#fff" : "#4a89f3"} />
           )}
         </View>
-        <Text style={styles.username}>
+        <Text style={[styles.username, darkMode && styles.darkText]}>
           {user.username || 'Utilisateur'} 
           {!user.username && " (Nom non défini)"}
         </Text>
-        <Text style={styles.email}>{user.email || 'Email non défini'}</Text>
+        <Text style={[styles.email, darkMode && styles.darkSubtext]}>
+          {user.email || 'Email non défini'}
+        </Text>
       </View>
 
-      <View style={styles.statsCard}>
+      <View style={[styles.statsCard, darkMode && styles.darkCard]}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>
+          <Text style={[styles.statValue, darkMode && styles.darkText]}>
             ${liquidBalance.toFixed(2)}
           </Text>
-          <Text style={styles.statLabel}>Solde liquide</Text>
+          <Text style={[styles.statLabel, darkMode && styles.darkSubtext]}>Solde liquide</Text>
         </View>
-        <View style={styles.statDivider} />
+        <View style={[styles.statDivider, darkMode && styles.darkDivider]} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{user.portfolio?.length || 0}</Text>
-          <Text style={styles.statLabel}>Actifs</Text>
+          <Text style={[styles.statValue, darkMode && styles.darkText]}>
+            {user.portfolio?.length || 0}
+          </Text>
+          <Text style={[styles.statLabel, darkMode && styles.darkSubtext]}>Actifs</Text>
         </View>
-        <View style={styles.statDivider} />
+        <View style={[styles.statDivider, darkMode && styles.darkDivider]} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>
+          <Text style={[styles.statValue, darkMode && styles.darkText]}>
             {user.rank ? `#${user.rank}` : 'N/A'}
           </Text>
-          <Text style={styles.statLabel}>Classement</Text>
+          <Text style={[styles.statLabel, darkMode && styles.darkSubtext]}>Classement</Text>
         </View>
       </View>
 
       <TouchableOpacity 
-        style={styles.refreshButton} 
+        style={[styles.refreshButton, darkMode && styles.darkRefreshButton]} 
         onPress={handleRefresh}
         disabled={isRefreshing}
       >
         {isRefreshing ? (
-          <ActivityIndicator size="small" color="#4a89f3" />
+          <ActivityIndicator size="small" color={darkMode ? "#fff" : "#4a89f3"} />
         ) : (
           <>
-            <Ionicons name="refresh" size={18} color="#4a89f3" />
-            <Text style={styles.refreshText}>Actualiser les données</Text>
+            <Ionicons name="refresh" size={18} color={darkMode ? "#fff" : "#4a89f3"} />
+            <Text style={[styles.refreshText, darkMode && styles.darkRefreshText]}>
+              Actualiser les données
+            </Text>
           </>
         )}
       </TouchableOpacity>
       
       {lastUpdate && (
-        <Text style={styles.lastUpdateText}>
+        <Text style={[styles.lastUpdateText, darkMode && styles.darkSubtext]}>
           Dernière mise à jour: {formatTimeAgo(lastUpdate)}
         </Text>
       )}
 
-      <View style={styles.valueCard}>
-        <Text style={styles.cardTitle}>Valeur totale de votre portefeuille</Text>
-        <Text style={styles.totalValue}>
+      <View style={[styles.valueCard, darkMode && styles.darkValueCard]}>
+        <Text style={[styles.cardTitle, darkMode && styles.darkText]}>
+          Valeur totale de votre portefeuille
+        </Text>
+        <Text style={[styles.totalValue, darkMode && styles.darkText]}>
           ${totalValue.toFixed(2)}
         </Text>
         <View style={styles.valueSplit}>
           <View style={styles.valueItem}>
-            <Text style={styles.valueAmount}>
+            <Text style={[styles.valueAmount, darkMode && styles.darkText]}>
               ${liquidBalance.toFixed(2)}
             </Text>
-            <Text style={styles.valueLabel}>Solde liquide</Text>
+            <Text style={[styles.valueLabel, darkMode && styles.darkSubtext]}>Solde liquide</Text>
           </View>
           <View style={styles.valuePlusContainer}>
-            <Text style={styles.valuePlus}>+</Text>
+            <Text style={[styles.valuePlus, darkMode && styles.darkText]}>+</Text>
           </View>
           <View style={styles.valueItem}>
-            <Text style={styles.valueAmount}>
+            <Text style={[styles.valueAmount, darkMode && styles.darkText]}>
               ${assetsValue.toFixed(2)}
             </Text>
-            <Text style={styles.valueLabel}>Valeur des actifs</Text>
+            <Text style={[styles.valueLabel, darkMode && styles.darkSubtext]}>Valeur des actifs</Text>
           </View>
         </View>
         <View style={styles.profitSection}>
-          <Text style={styles.profitLabel}>Profit total</Text>
+          <Text style={[styles.profitLabel, darkMode && styles.darkText]}>Profit total</Text>
           <Text 
             style={[
               styles.profitValue, 
-              { color: user.profitPercentage && user.profitPercentage >= 0 ? '#4CAF50' : '#F44336' }
+              { color: user.profitPercentage && user.profitPercentage >= 0 ? '#4CAF50' : '#F44336' },
+              darkMode && styles.darkText
             ]}
           >
             {user.profitPercentage && user.profitPercentage >= 0 ? '+' : ''}
@@ -386,8 +385,8 @@ const ProfileScreen: React.FC = () => {
       </View>
 
       {/* Portfolio détaillé */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Détail de vos actifs</Text>
+      <View style={[styles.section, darkMode && styles.darkSection]}>
+        <Text style={[styles.sectionTitle, darkMode && styles.darkText]}>Détail de vos actifs</Text>
         
         {user.portfolio && user.portfolio.length > 0 ? (
           user.portfolio.map((asset) => {
@@ -399,37 +398,38 @@ const ProfileScreen: React.FC = () => {
               : 0;
             
             return (
-              <View key={asset.cryptoId} style={styles.assetItem}>
-                <View style={styles.assetHeader}>
-                  <View style={styles.assetNameContainer}>
+              <View key={asset.cryptoId} style={[styles.assetItem, darkMode && styles.darkAssetItem]}>
+                <View style={[styles.assetHeader, darkMode && styles.darkAssetHeader]}>
+                  <View style={[styles.assetNameContainer, darkMode && styles.darkAssetNameContainer]}>
                     <AssetIcon crypto={crypto} assetId={asset.cryptoId} />
-                    <Text style={styles.assetName}>
+                    <Text style={[styles.assetName, darkMode && styles.darkText]}>
                       {crypto?.name || asset.cryptoId}
                     </Text>
                   </View>
-                  <Text style={styles.assetValue}>
+                  <Text style={[styles.assetValue, darkMode && styles.darkText]}>
                     ${currentValue.toFixed(2)}
                   </Text>
                 </View>
-                <View style={styles.assetDetails}>
-                  <Text style={styles.assetAmount}>
+                <View style={[styles.assetDetails, darkMode && styles.darkAssetDetails]}>
+                  <Text style={[styles.assetAmount, darkMode && styles.darkText]}>
                     {asset.amount.toFixed(6)} {crypto?.symbol || asset.cryptoId}
                   </Text>
                   <Text style={[
                     styles.assetProfit,
-                    { color: profitLoss >= 0 ? '#4CAF50' : '#F44336' }
+                    { color: profitLoss >= 0 ? '#4CAF50' : '#F44336' },
+                    darkMode && styles.darkText
                   ]}>
                     {profitLoss >= 0 ? '+' : ''}
                     {profitLossPercentage.toFixed(2)}%
                   </Text>
                 </View>
-                <View style={styles.assetPriceInfo}>
-                  <Text style={styles.assetPriceLabel}>Prix d'achat:</Text>
-                  <Text style={styles.assetPrice}>
+                <View style={[styles.assetPriceInfo, darkMode && styles.darkAssetPriceInfo]}>
+                  <Text style={[styles.assetPriceLabel, darkMode && styles.darkText]}>Prix d'achat:</Text>
+                  <Text style={[styles.assetPrice, darkMode && styles.darkText]}>
                     ${asset.averageBuyPrice.toFixed(2)}
                   </Text>
-                  <Text style={styles.assetPriceLabel}>Prix actuel:</Text>
-                  <Text style={styles.assetPrice}>
+                  <Text style={[styles.assetPriceLabel, darkMode && styles.darkText]}>Prix actuel:</Text>
+                  <Text style={[styles.assetPrice, darkMode && styles.darkText]}>
                     ${crypto?.currentPrice.toFixed(2) || 'N/A'}
                   </Text>
                 </View>
@@ -437,19 +437,26 @@ const ProfileScreen: React.FC = () => {
             );
           })
         ) : (
-          <Text style={styles.emptyTransactions}>
+          <Text style={[styles.emptyTransactions, darkMode && styles.darkText]}>
             Vous n'avez pas encore d'actifs
           </Text>
         )}
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Paramètres</Text>
+      <View style={[styles.section, darkMode && styles.darkSection]}>
+        <Text style={[styles.sectionTitle, darkMode && styles.darkText]}>Paramètres</Text>
         
-        <View style={styles.settingItem}>
-          <View style={styles.settingLabelContainer}>
-            <Ionicons name="moon-outline" size={24} color="#333" style={styles.settingIcon} />
-            <Text style={styles.settingLabel}>Mode sombre</Text>
+        <View style={[styles.settingItem, darkMode && styles.darkSettingItem]}>
+          <View style={[styles.settingLabelContainer, darkMode && styles.darkSettingLabelContainer]}>
+            <Ionicons 
+              name="moon-outline" 
+              size={24} 
+              color={darkMode ? "#fff" : "#333"} 
+              style={styles.settingIcon} 
+            />
+            <Text style={[styles.settingLabel, darkMode && styles.darkText]}>
+              Mode sombre
+            </Text>
           </View>
           <Switch
             value={darkMode}
@@ -458,23 +465,10 @@ const ProfileScreen: React.FC = () => {
             thumbColor={darkMode ? '#4a89f3' : '#f4f3f4'}
           />
         </View>
-        
-        <View style={styles.settingItem}>
-          <View style={styles.settingLabelContainer}>
-            <Ionicons name="notifications-outline" size={24} color="#333" style={styles.settingIcon} />
-            <Text style={styles.settingLabel}>Notifications</Text>
-          </View>
-          <Switch
-            value={notifications}
-            onValueChange={toggleNotifications}
-            trackColor={{ false: '#e0e0e0', true: '#4a89f380' }}
-            thumbColor={notifications ? '#4a89f3' : '#f4f3f4'}
-          />
-        </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Historique des transactions</Text>
+      <View style={[styles.section, darkMode && styles.darkSection]}>
+        <Text style={[styles.sectionTitle, darkMode && styles.darkText]}>Historique des transactions</Text>
         
         {transactions.length > 0 ? (
           // Afficher les 4 transactions les plus récentes en triant par date décroissante
@@ -482,39 +476,42 @@ const ProfileScreen: React.FC = () => {
             .sort((a, b) => b.timestamp - a.timestamp) // Trier par date décroissante (plus récent en premier)
             .slice(0, 4) // Prendre seulement les 4 premières (plus récentes)
             .map((transaction) => (
-            <View key={transaction.id} style={styles.transactionItem}>
-              <View style={styles.transactionInfo}>
-                <Text style={styles.transactionType}>
+            <View key={transaction.id} style={[styles.transactionItem, darkMode && styles.darkTransactionItem]}>
+              <View style={[styles.transactionInfo, darkMode && styles.darkTransactionInfo]}>
+                <Text style={[styles.transactionType, darkMode && styles.darkText]}>
                   {transaction.type === 'buy' ? 'Achat' : 'Vente'}
                 </Text>
-                <Text style={styles.transactionDate}>
+                <Text style={[styles.transactionDate, darkMode && styles.darkText]}>
                   {formatDate(transaction.timestamp)}
                 </Text>
               </View>
-              <View style={styles.transactionDetails}>
-                <Text style={styles.transactionAmount}>
+              <View style={[styles.transactionDetails, darkMode && styles.darkTransactionDetails]}>
+                <Text style={[styles.transactionAmount, darkMode && styles.darkText]}>
                   {transaction.amount.toFixed(4)} {transaction.cryptoId.toUpperCase()}
                 </Text>
-                <Text style={styles.transactionPrice}>
+                <Text style={[styles.transactionPrice, darkMode && styles.darkText]}>
                   ${transaction.price.toFixed(2)}
                 </Text>
               </View>
             </View>
           ))
         ) : (
-          <Text style={styles.emptyTransactions}>
+          <Text style={[styles.emptyTransactions, darkMode && styles.darkText]}>
             Aucune transaction pour le moment
           </Text>
         )}
         
         {transactions.length > 4 && (
-          <TouchableOpacity style={styles.viewAllButton}>
-            <Text style={styles.viewAllButtonText}>Voir tout l'historique</Text>
+          <TouchableOpacity style={[styles.viewAllButton, darkMode && styles.darkViewAllButton]}>
+            <Text style={[styles.viewAllButtonText, darkMode && styles.darkText]}>Voir tout l'historique</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+      <TouchableOpacity 
+        style={styles.logoutButton} 
+        onPress={handleLogout}
+      >
         <Ionicons name="log-out-outline" size={20} color="#fff" style={styles.logoutIcon} />
         <Text style={styles.logoutText}>Se déconnecter</Text>
       </TouchableOpacity>
@@ -879,6 +876,100 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
     color: '#666',
+  },
+  darkContainer: {
+    backgroundColor: '#121212',
+  },
+  darkHeader: {
+    borderBottomColor: '#2c2c2c',
+  },
+  darkText: {
+    color: '#fff',
+  },
+  darkSubtext: {
+    color: '#aaa',
+  },
+  darkCard: {
+    backgroundColor: '#1e1e1e',
+    shadowColor: '#000',
+  },
+  darkDivider: {
+    backgroundColor: '#2c2c2c',
+  },
+  darkSection: {
+    borderBottomColor: '#2c2c2c',
+  },
+  darkValueCard: {
+    borderBottomColor: '#2c2c2c',
+  },
+  darkRefreshButton: {
+    backgroundColor: '#2c2c2c',
+  },
+  darkRefreshText: {
+    color: '#fff',
+  },
+  darkAssetItem: {
+    backgroundColor: '#1e1e1e',
+  },
+  darkAssetHeader: {
+    backgroundColor: '#2c2c2c',
+  },
+  darkAssetNameContainer: {
+    backgroundColor: '#2c2c2c',
+  },
+  darkAssetDetails: {
+    backgroundColor: '#2c2c2c',
+  },
+  darkAssetPriceInfo: {
+    backgroundColor: '#2c2c2c',
+  },
+  darkAssetPriceLabel: {
+    color: '#aaa',
+  },
+  darkAssetPrice: {
+    color: '#aaa',
+  },
+  darkSettingItem: {
+    backgroundColor: '#2c2c2c',
+  },
+  darkSettingLabelContainer: {
+    backgroundColor: '#2c2c2c',
+  },
+  darkSettingIcon: {
+    color: '#aaa',
+  },
+  darkSettingLabel: {
+    color: '#aaa',
+  },
+  darkTransactionItem: {
+    backgroundColor: '#2c2c2c',
+  },
+  darkTransactionInfo: {
+    backgroundColor: '#2c2c2c',
+  },
+  darkTransactionType: {
+    color: '#aaa',
+  },
+  darkTransactionDate: {
+    color: '#aaa',
+  },
+  darkTransactionDetails: {
+    backgroundColor: '#2c2c2c',
+  },
+  darkTransactionAmount: {
+    color: '#aaa',
+  },
+  darkTransactionPrice: {
+    color: '#aaa',
+  },
+  darkEmptyTransactions: {
+    color: '#aaa',
+  },
+  darkViewAllButton: {
+    backgroundColor: '#2c2c2c',
+  },
+  darkViewAllButtonText: {
+    color: '#aaa',
   },
 });
 
