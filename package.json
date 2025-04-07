@@ -7,7 +7,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "prod": "cd backend && npm run dev"
+    "prod": "cd backend && npm run dev",
+    "prod:build": "cd backend && npm run build"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.1.2",
